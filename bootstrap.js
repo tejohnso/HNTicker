@@ -52,7 +52,7 @@ var loadIntoWindow = function(window) {
     var karma = aEvent.target.responseText.indexOf('karma:');
     var text = aEvent.target.responseText.substr(karma + 15);
     var karmaVal = text.substr(0, text.indexOf('<'));
-    drawButton(karmaVal);
+    drawButton(karmaVal.substr(0,6));
   };
   button.karmaRequest.onerror = function(aEvent) {
     window.dump("HNTicker - ajax error: " + aEvent.target.status);
