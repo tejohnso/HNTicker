@@ -19,7 +19,7 @@ var loadIntoWindow = function(window) {
     var win = Components.classes['@mozilla.org/appshell/window-mediator;1']
               .getService(Components.interfaces.nsIWindowMediator)
               .getMostRecentWindow('navigator:browser');
-    win.openUILinkIn('http://news.ycombinator.com', 'tab');
+    win.openUILinkIn('https://news.ycombinator.com', 'tab');
   }, true);
   anchor.parentNode.insertBefore(button, anchor);
   
@@ -48,12 +48,16 @@ var loadIntoWindow = function(window) {
 
   button.karmaRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                         .createInstance(Components.interfaces.nsIXMLHttpRequest);
-  button.karmaRequest.onload = function(aEvent) {
-    var karma = aEvent.target.responseText.indexOf('karma:');
-    var text = aEvent.target.responseText.substr(karma + 15);
-    var karmaVal = text.substr(0, text.indexOf('<'));
-    drawButton(karmaVal.substr(0,6));
+  button.karmaRequest.onprogress = function(aEvent) {
+    if (aEvent.target.loaded > 1500) {
+       button.karmaRequest.abort();
+    }
   };
+  button.karmaRequest.addEventListener("loadend", function(e) {
+    var karmaRegExp = new RegExp(userID + '</a>&nbsp;\\(' + '(\\d+)' + '\\)');
+    var karmaMatch = e.target.responseText.match(karmaRegExp);
+    drawButton(karmaMatch ? karmaMatch[1] : 'login');
+  });
   button.karmaRequest.onerror = function(aEvent) {
     window.dump("HNTicker - ajax error: " + aEvent.target.status);
   };
@@ -79,7 +83,7 @@ var loadIntoWindow = function(window) {
      prefBranch.setCharPref('username', userID);
   }
   window.dump('HNTicker - username ' + userID);
-  var dataURL = "http://news.ycombinator.com/user?id=" + userID;
+  var dataURL = "https://news.ycombinator.com";
   if (typeof intervalSeconds !== 'number' || intervalSeconds < 301) {
      intervalSeconds = 301;
      prefBranch.setIntPref('interval', 301);
