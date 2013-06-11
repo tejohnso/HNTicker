@@ -20,6 +20,7 @@ var loadIntoWindow = function(window) {
               .getService(Components.interfaces.nsIWindowMediator)
               .getMostRecentWindow('navigator:browser');
     win.openUILinkIn('https://news.ycombinator.com', 'tab');
+    loadKarmaAndDraw();
   }, true);
   anchor.parentNode.insertBefore(button, anchor);
   
