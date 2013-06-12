@@ -32,6 +32,7 @@ var loadIntoWindow = function(window) {
   img.src = 'data:image/gif;base64,R0lGODlhEgASAKIAAP/jyvihV/aKLfmxc/////9mAAAAAAAAACH5BAAAAAAALAAAAAASABIAAAMpWLrc/jDKOQkRy8pBhuKeRAAKQFBBxwVUYY5twXVxodV3nLd77f9ASQIAOw==';
 
   var drawButton = function(karmaVal) {
+    window.dump('HNTicker: redrawing' + '\n');
     ctx.font = fontString;
     var textLeftPad = 1;
     var fontHalfHeight = ctx.font.substr(0,ctx.font.indexOf('px'))/2;
@@ -131,9 +132,9 @@ var loadIntoWindow = function(window) {
   loadKarmaAndDraw();
 
   window.gBrowser.addEventListener("load", function(event) {
-     window.dump(event.originalTarget.defaultView.location.href + '\n');
-     if (/https:\/\/news\.ycombinator\.com\/(news)?/.test(event.originalTarget.defaultView.location.href)) {
-       window.dump('HNTicker: redrawing' + '\n');
+     //window.dump(event.originalTarget.defaultView.location.href + '\n');
+     if (/https:\/\/news\.ycombinator\.com\/(news)?/.test(event.
+     originalTarget.defaultView.location.href)) {
        loadKarmaAndDraw();
      }
   }, true);
