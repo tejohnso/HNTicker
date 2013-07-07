@@ -6,8 +6,7 @@ var Ci = Components.interfaces;
 var loadIntoWindow = function(window) {
   var anchor = window.document.getElementById("tabbrowser-tabs");
   if (!anchor) {
-    window.dump('HNTicker: window ' + window.id +
-                ' ' + window.title + ' has no browser tabs to anchor to' + '\n');
+    window.dump('HNTicker: window has no tabs\n');
     return;
   }
   var button = window.document.createElement("toolbarbutton");
@@ -19,7 +18,8 @@ var loadIntoWindow = function(window) {
     var win = Components.classes['@mozilla.org/appshell/window-mediator;1']
               .getService(Components.interfaces.nsIWindowMediator)
               .getMostRecentWindow('navigator:browser');
-    win.openUILinkIn('https://news.ycombinator.com' + button.loginNeeded, 'tab');
+    win.openUILinkIn('https://news.ycombinator.com' + button.loginNeeded,
+     'tab');
   }, true);
   anchor.parentNode.insertBefore(button, anchor);
   
@@ -31,18 +31,18 @@ var loadIntoWindow = function(window) {
   var img = window.document.createElementNS("http://www.w3.org/1999/xhtml","img");
   img.src = 'data:image/gif;base64,R0lGODlhEgASAKIAAP/jyvihV/aKLfmxc/////9mAAAAAAAAACH5BAAAAAAALAAAAAASABIAAAMpWLrc/jDKOQkRy8pBhuKeRAAKQFBBxwVUYY5twXVxodV3nLd77f9ASQIAOw==';
 
-  var drawButton = function(karmaVal) {
+  var drawButton = function(text) {
     window.dump('HNTicker: redrawing' + '\n');
     ctx.font = fontString;
     var textLeftPad = 1;
     var fontHalfHeight = ctx.font.substr(0,ctx.font.indexOf('px'))/2;
-    canvas.width = (img.width + ctx.measureText(karmaVal).width) + textLeftPad;
+    canvas.width = (img.width + ctx.measureText(text).width) + textLeftPad;
     canvas.height = img.height;
     ctx.font = fontString;
     ctx.textBaseline = 'top';
     ctx.drawImage(img,0,0);
     ctx.fillStyle = "#012";
-    ctx.fillText(karmaVal, img.width + textLeftPad, img.height/2 + 1 - fontHalfHeight);
+    ctx.fillText(text, img.width + textLeftPad, img.height/2 + 1 - fontHalfHeight);
     anchor.parentNode.insertBefore(button, anchor);
     button.setAttribute("image", canvas.toDataURL());
   };
@@ -70,9 +70,6 @@ var loadIntoWindow = function(window) {
   };
 
   var loadKarmaAndDraw = function() {
-     //drawing and loading should be split.  if we are coming
-     //from the hn page we can get the karma from the loaded page
-     //and redraw - without reloading the page internally
     button.karmaRequest.open("GET", dataURL, true);
     button.karmaRequest.send(null);
   };
@@ -132,7 +129,6 @@ var loadIntoWindow = function(window) {
   loadKarmaAndDraw();
 
   window.gBrowser.addEventListener("load", function(event) {
-     //window.dump(event.originalTarget.defaultView.location.href + '\n');
      if (/https:\/\/news\.ycombinator\.com\/(news)?/.test(event.
      originalTarget.defaultView.location.href)) {
        loadKarmaAndDraw();
