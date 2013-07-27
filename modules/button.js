@@ -6,9 +6,6 @@ function loadButton(window) {
   var hnTicker = window.hnTicker;
   hnTicker.button = window.document.createElement("toolbarbutton");
   hnTicker.button.setAttribute("id", "HNTicker");
-  hnTicker.button.setAttribute("class", "hnTicker.button.control");
-  hnTicker.button.style.marginRight='0.5em';
-  hnTicker.button.style.userFocus='normal';
   hnTicker.button.clickListener = function() {
     var win = Components.classes['@mozilla.org/appshell/window-mediator;1']
               .getService(Components.interfaces.nsIWindowMediator)
@@ -16,8 +13,8 @@ function loadButton(window) {
     win.openUILinkIn('https://news.ycombinator.com' + hnTicker.button.loginNeeded, 'tab');
   };
   hnTicker.button.addEventListener("click", hnTicker.button.clickListener, true);
-  hnTicker.buttonSibling.parentNode.insertBefore(hnTicker.button
-                                                ,hnTicker.buttonSibling);
+
+  hnTicker.buttonSibling.parentNode.insertBefore(hnTicker.button, hnTicker.buttonSibling);
   
   hnTicker.canvas = window.document
                     .createElementNS("http://www.w3.org/1999/xhtml", "canvas");
