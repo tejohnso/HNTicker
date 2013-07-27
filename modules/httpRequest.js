@@ -41,10 +41,6 @@ function loadHttpRequest(window) {
   };
 
   hnTicker.unloadHttp = function() {
-    window.dump('a\n');
-    try{
     hnTicker.karmaRequest.removeEventListener("loadend", hnTicker.loadendListener);
-    }catch(e){window.dump(e + '\n');}
-    window.dump('a\n');
   };
 }
