@@ -3,6 +3,4 @@
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
    <setting pref="extensions.HNTicker.interval" type="integer" title="Interval (seconds - 180 minimum)">
    </setting>
-   <setting pref="extensions.HNTicker.username" type="string" title="HN user name">
-   </setting>
 </vbox>

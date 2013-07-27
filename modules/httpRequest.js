@@ -16,8 +16,8 @@ function loadHttpRequest(window) {
   };
 
   hnTicker.loadendListener = function(e) {
-    var karmaRegExp = new RegExp(hnTicker.userID + 
-                                '</a>&nbsp;\\(' + '(\\d+)' + '\\)')
+    var karmaRegExp = new RegExp('</a>&nbsp;\\(' + '(\\d+)' +
+                                 '\\)&nbsp;|&nbsp;<a href="logout?')
        ,karmaMatch = e.target.responseText.match(karmaRegExp);
     if (karmaMatch) {
        hnTicker.drawButton(karmaMatch[1]);
@@ -41,6 +41,7 @@ function loadHttpRequest(window) {
   };
 
   hnTicker.unloadHttp = function() {
-    hnTicker.karmaRequest.removeEventListener("loadend", hnTicker.loadendListener);
+    hnTicker.karmaRequest
+            .removeEventListener("loadend", hnTicker.loadendListener);
   };
 }

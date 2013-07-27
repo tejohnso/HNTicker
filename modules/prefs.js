@@ -13,15 +13,10 @@ function loadPrefs(window) {
                         .getService(Components.interfaces.nsIPrefService)
                         .getDefaultBranch("extensions.HNTicker.");
   hnTicker.defBranch.setIntPref('interval', 180);
-  hnTicker.defBranch.setCharPref('username', '-');
 
   hnTicker.prefObserver = {
      observe: function(aSubject, aTopic, aData) {
         switch (aData) {
-        case "username":
-          hnTicker.userID = hnTicker.prefBranch.getCharPref('username');
-          window.dump('HNTicker: username ' + hnTicker.userID + '\n');
-          break;
         case "interval":
           hnTicker.intervalSeconds = hnTicker
                                     .prefBranch.getIntPref('interval');
@@ -46,18 +41,6 @@ function loadPrefs(window) {
   };
 
   hnTicker.intervalSeconds = hnTicker.prefBranch.getIntPref('interval');
-  hnTicker.userID = hnTicker.prefBranch.getCharPref('username');
-  if (hnTicker.userID === '-') {
-     hnTicker.userID = {"value": "-"};
-     Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-     .getService(Components.interfaces.nsIPromptService)
-     .prompt(null, "username", "HNTicker: What is your username?", 
-             hnTicker.userID, null, {});
-     hnTicker.userID = hnTicker.userID.value;
-     hnTicker.prefBranch.setCharPref('username', hnTicker.userID);
-  }
-  window.dump('HNTicker: username ' + hnTicker.userID + '\n');
-
   if (typeof hnTicker.intervalSeconds !== 'number' || 
       hnTicker.intervalSeconds < 180) {
     hnTicker.intervalSeconds = 180;
