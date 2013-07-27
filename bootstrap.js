@@ -3,157 +3,177 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-var loadIntoWindow = function(window) {
-  var anchor = window.document.getElementById("tabbrowser-tabs");
+function loadIntoWindow (window) {
+  var hnTicker = {}
+     ,anchor = window.document.getElementById("tabbrowser-tabs");
   if (!anchor) {
     window.dump('HNTicker: window has no tabs\n');
     return;
   }
-  var button = window.document.createElement("toolbarbutton");
-  button.setAttribute("id", "HNTicker");
-  button.setAttribute("class", "button-control");
-  button.style.marginRight='0.5em';
-  button.style.userFocus='normal';
-  button.addEventListener("click", function() {
+  hnTicker.button = window.document.createElement("toolbarbutton");
+  hnTicker.button.setAttribute("id", "HNTicker");
+  hnTicker.button.setAttribute("class", "hnTicker.button.control");
+  hnTicker.button.style.marginRight='0.5em';
+  hnTicker.button.style.userFocus='normal';
+  hnTicker.button.addEventListener("click", function() {
     var win = Components.classes['@mozilla.org/appshell/window-mediator;1']
               .getService(Components.interfaces.nsIWindowMediator)
               .getMostRecentWindow('navigator:browser');
-    win.openUILinkIn('https://news.ycombinator.com' + button.loginNeeded,
+    win.openUILinkIn('https://news.ycombinator.com' + hnTicker.button.loginNeeded,
      'tab');
   }, true);
-  anchor.parentNode.insertBefore(button, anchor);
+  anchor.parentNode.insertBefore(hnTicker.button, anchor);
   
-  var canvas = window.document.createElementNS("http://www.w3.org/1999/xhtml",
-                                                 "canvas");
-  canvas.setAttribute("id", "HNTicker-canvas");
-  var fontString = "16px sans-serif";
-  var ctx = canvas.getContext("2d");
-  var img = window.document.createElementNS("http://www.w3.org/1999/xhtml","img");
-  img.src = 'data:image/gif;base64,R0lGODlhEgASAKIAAP/jyvihV/aKLfmxc/////9mAAAAAAAAACH5BAAAAAAALAAAAAASABIAAAMpWLrc/jDKOQkRy8pBhuKeRAAKQFBBxwVUYY5twXVxodV3nLd77f9ASQIAOw==';
+  hnTicker.canvas = window.document
+                    .createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  hnTicker.canvas.setAttribute("id", "HNTicker-canvas");
+  hnTicker.ctx = hnTicker.canvas.getContext("2d");
+  hnTicker.font = "16px sans-serif";
+  hnTicker.img = window.document
+                 .createElementNS("http://www.w3.org/1999/xhtml","img");
+  hnTicker.img.src = 'data:image/gif;base64,R0lGODlhEgASAKIAAP/jyvihV/aKLfmxc/////9mAAAAAAAAACH5BAAAAAAALAAAAAASABIAAAMpWLrc/jDKOQkRy8pBhuKeRAAKQFBBxwVUYY5twXVxodV3nLd77f9ASQIAOw==';
 
-  var drawButton = function(text) {
-    window.dump('HNTicker: redrawing' + '\n');
-    ctx.font = fontString;
-    var textLeftPad = 1;
-    var fontHalfHeight = ctx.font.substr(0,ctx.font.indexOf('px'))/2;
-    canvas.width = (img.width + ctx.measureText(text).width) + textLeftPad;
-    canvas.height = img.height;
-    ctx.font = fontString;
-    ctx.textBaseline = 'top';
-    ctx.drawImage(img,0,0);
-    ctx.fillStyle = "#012";
-    ctx.fillText(text, img.width + textLeftPad, img.height/2 + 1 - fontHalfHeight);
-    anchor.parentNode.insertBefore(button, anchor);
-    button.setAttribute("image", canvas.toDataURL());
-  };
+  function drawButton(text) {
+    var textLeftPad = 1
+       ,fontHalfHeight = hnTicker.font.substr(0,
+                         hnTicker.font.indexOf('px'))/2
+       ,xPos = hnTicker.img.width + textLeftPad
+       ,yPos = hnTicker.img.height/2 - fontHalfHeight;
+    window.dump('HNTicker: redrawing - text is ' + text + '\n');
+    hnTicker.ctx.font = hnTicker.font;
+    hnTicker.canvas.width = hnTicker.img.width +
+                            hnTicker.ctx.measureText(text).width +
+                            textLeftPad;
+    hnTicker.canvas.height = hnTicker.img.height;
+    hnTicker.ctx.textBaseline = 'top';
+    hnTicker.ctx.drawImage(hnTicker.img,0,0);
+    hnTicker.ctx.font = hnTicker.font;
+    hnTicker.ctx.fillStyle = "#012";
+    hnTicker.ctx.fillText(text, xPos, yPos);
+    anchor.parentNode.insertBefore(hnTicker.button, anchor);
+    hnTicker.button.setAttribute("image", hnTicker.canvas.toDataURL());
+  }
 
-  button.karmaRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                        .createInstance(Components.interfaces.nsIXMLHttpRequest);
-  button.karmaRequest.onprogress = function(aEvent) {
+  hnTicker.karmaRequest = Components
+                          .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                          .createInstance(Components
+                          .interfaces.nsIXMLHttpRequest);
+  hnTicker.karmaRequest.onprogress = function(aEvent) {
     if (aEvent.target.loaded > 1500) {
-       button.karmaRequest.abort();
+       hnTicker.karmaRequest.abort();
     }
   };
-  button.karmaRequest.addEventListener("loadend", function(e) {
-    var karmaRegExp = new RegExp(userID + '</a>&nbsp;\\(' + '(\\d+)' + '\\)');
-    var karmaMatch = e.target.responseText.match(karmaRegExp);
+  hnTicker.karmaRequest.addEventListener("loadend", function(e) {
+    var karmaRegExp = new RegExp(hnTicker.userID + 
+                                '</a>&nbsp;\\(' + '(\\d+)' + '\\)')
+       ,karmaMatch = e.target.responseText.match(karmaRegExp);
     if (karmaMatch) {
        drawButton(karmaMatch[1]);
-       button.loginNeeded = '';
+       hnTicker.button.loginNeeded = '';
     } else {
-       button.loginNeeded = '/newslogin';
+       hnTicker.button.loginNeeded = '/newslogin';
        drawButton('login');
     }
   });
-  button.karmaRequest.onerror = function(aEvent) {
+
+  hnTicker.karmaRequest.onerror = function(aEvent) {
     window.dump("HNTicker: ajax error: " + aEvent.target.status + '\n');
+    drawButton('error');
   };
 
-  var loadKarmaAndDraw = function() {
-    button.karmaRequest.open("GET", dataURL, true);
-    button.karmaRequest.send(null);
-  };
+  function loadKarmaAndDraw() {
+    hnTicker.karmaRequest.open("GET", hnTicker.dataURL, true);
+    hnTicker.karmaRequest.send(null);
+  }
 
-  var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                   .getService(Components.interfaces.nsIPrefService)
-                   .getBranch("extensions.HNTicker.");
-  var defBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                   .getService(Components.interfaces.nsIPrefService)
-                   .getDefaultBranch("extensions.HNTicker.");
-  defBranch.setIntPref('interval', 180);
-  defBranch.setCharPref('username', '-');
-  var prefObserver = {
+  hnTicker.prefBranch = Components
+                        .classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                        .getBranch("extensions.HNTicker.");
+  hnTicker.defBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                        .getDefaultBranch("extensions.HNTicker.");
+  hnTicker.defBranch.setIntPref('interval', 180);
+  hnTicker.defBranch.setCharPref('username', '-');
+  hnTicker.prefObserver = {
      observe: function(aSubject, aTopic, aData) {
         switch (aData) {
-           case "username":
-              userID = prefBranch.getCharPref('username');
-              window.dump('HNTicker: username ' + userID + '\n');
-             break;
-           case "interval":
-              intervalSeconds = prefBranch.getIntPref('interval');
-              if (intervalSeconds < 180) {
-                 intervalSeconds = 180;
-                 prefBranch.setIntPref('interval', 180);
-              }
-              window.clearInterval(button.intervalHandle);
-              button.intervalHandle = window.setInterval(function() {
-                 loadKarmaAndDraw();
-              }, intervalSeconds * 1000);
-             window.dump('HNTicker: reloading every ' + intervalSeconds + ' seconds' + '\n');
-             break;
+        case "username":
+          hnTicker.userID = hnTicker.prefBranch.getCharPref('username');
+          window.dump('HNTicker: username ' + hnTicker.userID + '\n');
+          break;
+        case "interval":
+          hnTicker.intervalSeconds = hnTicker
+                                    .prefBranch.getIntPref('interval');
+          if (hnTicker.intervalSeconds < 180) {
+            hnTicker.intervalSeconds = 180;
+            hnTicker.prefBranch.setIntPref('interval', 180);
+          }
+          window.clearInterval(hnTicker.button.intervalHandle);
+          hnTicker.button.intervalHandle = window.setInterval(function() {
+            loadKarmaAndDraw();
+          }, hnTicker.intervalSeconds * 1000);
+          window.dump('HNTicker: reloading every ' + 
+                      hnTicker.intervalSeconds + ' seconds' + '\n');
+          break;
         }
      },
      unregister: function() {
-        prefBranch.removeObserver("", prefObserver);
+        hnTicker.prefBranch.removeObserver("", hnTicker.prefObserver);
      }
   };
-  var intervalSeconds = prefBranch.getIntPref('interval');
-  var userID = prefBranch.getCharPref('username');
-  if (userID === '-') {
-     userID = {"value": "-"};
+  hnTicker.intervalSeconds = hnTicker.prefBranch.getIntPref('interval');
+  hnTicker.userID = hnTicker.prefBranch.getCharPref('username');
+  if (hnTicker.userID === '-') {
+     hnTicker.userID = {"value": "-"};
      Cc["@mozilla.org/embedcomp/prompt-service;1"]
      .getService(Components.interfaces.nsIPromptService)
-     .prompt(null, "username", "HNTicker: What is your username?", userID, null, {});
-     userID = userID.value;
-     prefBranch.setCharPref('username', userID);
+     .prompt(null, "username", "HNTicker: What is your username?", 
+             hnTicker.userID, null, {});
+     hnTicker.userID = hnTicker.userID.value;
+     hnTicker.prefBranch.setCharPref('username', hnTicker.userID);
   }
-  window.dump('HNTicker: username ' + userID + '\n');
-  prefBranch.addObserver("", prefObserver, false);
-  var dataURL = "https://news.ycombinator.com";
-  if (typeof intervalSeconds !== 'number' || intervalSeconds < 180) {
-     intervalSeconds = 180;
-     prefBranch.setIntPref('interval', 180);
+  window.dump('HNTicker: username ' + hnTicker.userID + '\n');
+  hnTicker.prefBranch.addObserver("", hnTicker.prefObserver, false);
+  hnTicker.dataURL = "https://news.ycombinator.com";
+  if (typeof hnTicker.intervalSeconds !== 'number' || 
+      hnTicker.intervalSeconds < 180) {
+    hnTicker.intervalSeconds = 180;
+    hnTicker.prefBranch.setIntPref('interval', 180);
   }
-  window.dump('HNTicker: reloading every ' + intervalSeconds + ' seconds' + '\n');
+  window.dump('HNTicker: reloading every ' + 
+              hnTicker.intervalSeconds + ' seconds' + '\n');
 
   loadKarmaAndDraw();
 
   window.gBrowser.addEventListener("load", function(event) {
      if (/https:\/\/news\.ycombinator\.com\/(news)?/.test(event.
-     originalTarget.defaultView.location.href)) {
+         originalTarget.defaultView.location.href)) {
        loadKarmaAndDraw();
      }
   }, true);
-  button.intervalHandle = window.setInterval(function() {
+  hnTicker.button.intervalHandle = window.setInterval(function() {
     loadKarmaAndDraw();
-  }, intervalSeconds * 1000);  
-};
+  }, hnTicker.intervalSeconds * 1000);  
+  window.hnTicker = hnTicker;
+}
 
 function unloadFromWindow(window) {
+  var button = window.document.getElementById("HNTicker")
+     ,hnTicker = window.hnTicker;
   if (!window) {
     window.dump('no window?!' + '\n');
     return;
   }
-
-  prefObserver.unregister();
-  var button = window.document.getElementById("HNTicker");
+  hnTicker.prefObserver.unregister();
   if (button) {
-    button.karmaRequest.abort();
-    window.clearInterval(button.intervalHandle);
-    button.parentNode.removeChild(button);
-    window.dump('button unloaded' + '\n');
+    hnTicker.karmaRequest.abort();
+    window.clearInterval(hnTicker.button.intervalHandle);
+    hnTicker.button.parentNode.removeChild(hnTicker.button);
+    delete window.hnTicker;
+    window.dump('hnTicker button unloaded' + '\n');
   } else {
-    window.dump('no button to unload' + '\n');
+    window.dump('no hnTicker button to unload' + '\n');
   }
 }
 
@@ -176,12 +196,13 @@ var windowListener = {
 };
 
 function startup(aData, aReason) {
-  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+  var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+           .getService(Ci.nsIWindowMediator)
+     ,enumerator = wm.getEnumerator("navigator:browser")
+     ,win;
 
-  // Load into any existing windows
-  var enumerator = wm.getEnumerator("navigator:browser");
   while (enumerator.hasMoreElements()) {
-    var win = enumerator.getNext().QueryInterface(Ci.nsIDOMWindow).top;
+    win = enumerator.getNext().QueryInterface(Ci.nsIDOMWindow).top;
     loadIntoWindow(win);
   }
 
@@ -191,17 +212,18 @@ function startup(aData, aReason) {
 
 function shutdown(aData, aReason) {
   // When the application is shutting down we normally don't have to clean up any UI changes
+  var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+           .getService(Ci.nsIWindowMediator)
+     ,enumerator = wm.getEnumerator("navigator:browser")
+     ,win;
+
   if (aReason === APP_SHUTDOWN) {return;}
 
-  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-
-  // Stop watching for new windows
   wm.removeListener(windowListener);
 
   // Unload from any existing windows
-  var enumerator = wm.getEnumerator("navigator:browser");
   while (enumerator.hasMoreElements()) {
-    var win = enumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
+    win = enumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
     win.dump('unloading from window' + '\n');
     unloadFromWindow(win);
   }
